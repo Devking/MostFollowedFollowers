@@ -16,6 +16,7 @@ class User:
   def __lt__(self, other):
     return self.followers < other.followers
 
+# You need to have your bearer token specified in .env
 load_dotenv()
 BEARER_TOKEN = os.environ.get("BEARER_TOKEN")
 
@@ -76,7 +77,7 @@ while (next_token):
 
 # Iterate through the followers
 # 300 requests per 15-minute window (aka 300 max followers)
-print("Number of followers: " + len(follower_ids))
+print("Number of followers: " + str(len(follower_ids)))
 top_followers = []
 top_followers_number = 10 # Note that if you make this too high, it will take a long time
 for follower_user_id in follower_ids:
@@ -99,4 +100,7 @@ for follower_user_id in follower_ids:
       top_followers.sort()
       top_followers.pop(0)
 
-print(top_followers)
+# Finally, print the top ten!!
+print("Your top followers are:")
+for followers in top_followers:
+  print(followers)
