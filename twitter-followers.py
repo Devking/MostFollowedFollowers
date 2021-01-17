@@ -3,33 +3,18 @@ from dotenv import load_dotenv
 import requests
 
 class User:
-  def __init__(self, id, username, followers):
-    self.id = id
+  def __init__(self, username, followers):
     self.username = username
     self.followers = followers
 
   def __str__(self):
-    return "User: {} ID: {} Followers: {}".format(self.username, self.id, self.followers)
+    return "User: {} Followers: {}".format(self.username, self.followers)
 
   def __repr__(self):
-    return "<User: {}, ID: {}, Followers: {}>".format(self.username, self.id, self.followers)
+    return "<User: {}, Followers: {}>".format(self.username, self.followers)
 
   def __lt__(self, other):
     return self.followers < other.followers
-
-# user_a = User(1, "Bob", 100);
-# user_b = User(2, "Alice", 300);
-
-# print(user_a)
-# print(user_b)
-# print(user_a < user_b)
-
-# people = [user_b, user_a]
-# print(people)
-# people.sort()
-# print(people)
-# people.pop(0)
-# print(people)
 
 load_dotenv()
 BEARER_TOKEN = os.environ.get("BEARER_TOKEN")
@@ -93,6 +78,7 @@ while (next_token):
 # 300 requests per 15-minute window (aka 300 max followers)
 print("Number of followers: " + len(follower_ids))
 top_followers = []
+top_followers_number = 10 # Note that if you make this too high, it will take a long time
 for follower_user_id in follower_ids:
   follower_id_endpoint = "https://api.twitter.com/2/users/" + follower_user_id
   headers = {'Authorization': 'Bearer ' + BEARER_TOKEN}
@@ -104,12 +90,12 @@ for follower_user_id in follower_ids:
   response = response.json()
   follower_count = response['data']['public_metrics']['followers_count']
   username = response['data']['username']
-  if len(top_followers) < 11:
-    top_followers.append(User(follower_user_id, username, follower_count))
+  if len(top_followers) < top_followers_number:
+    top_followers.append(User(username, follower_count))
     top_followers.sort()
   else:
     if follower_count > top_followers[0].followers:
-      top_followers.append(User(follower_user_id, username, follower_count))
+      top_followers.append(User(username, follower_count))
       top_followers.sort()
       top_followers.pop(0)
 
