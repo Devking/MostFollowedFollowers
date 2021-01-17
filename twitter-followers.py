@@ -1,3 +1,7 @@
+import os
+from dotenv import load_dotenv
+import requests
+
 class User:
   def __init__(self, id, username, followers):
     self.id = id
@@ -13,29 +17,63 @@ class User:
   def __lt__(self, other):
     return self.followers < other.followers
 
-user_a = User(1, "Bob", 100);
-user_b = User(2, "Alice", 300);
+# user_a = User(1, "Bob", 100);
+# user_b = User(2, "Alice", 300);
 
-print(user_a)
-print(user_b)
-print(user_a < user_b)
+# print(user_a)
+# print(user_b)
+# print(user_a < user_b)
 
-people = [user_b, user_a]
-print(people)
-people.sort()
-print(people)
-people.pop(0)
-print(people)
+# people = [user_b, user_a]
+# print(people)
+# people.sort()
+# print(people)
+# people.pop(0)
+# print(people)
 
-# Get username
-# Get user's id using the API
-  # GET https://api.twitter.com/2/users/by/username/:username
-  # My ID is 161051718
-# Get user's follower list using the API (repeat this step due to pagination)
-  # GET https://api.twitter.com/2/users/:id/followers
-  # Returns an object with property "data" that's an array of users
-  # Each user has id and username fields I should keep
-  # Also returns property "meta" with "next_token" to use for the next API call
+load_dotenv()
+BEARER_TOKEN = os.environ.get("BEARER_TOKEN")
+
+username = "WellsLucasSanto"
+print("Getting most followed followers for: " + username)
+
+# Get user's id
+username_endpoint = "https://api.twitter.com/2/users/by/username/" + username
+headers = {'Authorization': 'Bearer ' + BEARER_TOKEN}
+response = requests.get(username_endpoint, headers=headers)
+if response.status_code != 200:
+  raise Exception("Request returned an error: {} {}".format(response.status_code, response.text))
+response = response.json()
+user_id = response['data']['id']
+print("User ID is " + user_id)
+
+# Get user's follower list
+followers_endpoint = "https://api.twitter.com/2/users/" + user_id + "/followers"
+headers = {'Authorization': 'Bearer ' + BEARER_TOKEN}
+params = {'max_results': 1000}
+response = requests.get(followers_endpoint, headers=headers, params=params)
+if response.status_code != 200:
+  raise Exception("Request returned an error: {} {}".format(response.status_code, response.text))
+response = response.json()
+meta = response['meta']
+result_count = meta['result_count']
+next_token = meta['next_token']
+print(response)
+
+while (next_token):
+  params = {'max_results': 1000, 'pagination_token': next_token}
+  response = requests.get(followers_endpoint, headers=headers, params=params)
+  if response.status_code != 200:
+    raise Exception("Request returned an error: {} {}".format(response.status_code, response.text))
+  response = response.json()
+  meta = response['meta']
+  result_count = meta['result_count']
+  if ('next_token' in meta):
+    next_token = meta['next_token']
+  else:
+    next_token = None
+  print(response)
+
 # Iterate through the user's followers
 # For each user, check their follower count (using the API)
   # GET https://api.twitter.com/2/users/:id
